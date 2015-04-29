@@ -1,0 +1,28 @@
+#maven trash
+/target
+/build
+target/
+project/target
+
+# IntelliJ specific
+.idea
+*.iml
+*.ipr
+*.iws
+
+# Eclipse specific
+*.settings
+*.classpath
+*.project
+*.checkstyle
+
+#jvm & general trash
+*.class
+*.jar
+*.log
+**.swp
+*#
+*~
+
+#java native error dumps
+hs_err_pid*
