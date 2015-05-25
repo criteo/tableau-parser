@@ -1,15 +1,13 @@
-package com.criteo.tableau
+package com.criteo.tableau.templating
 
-import com.criteo.tableau.XmlAttributesParser.{AttributeKey, XmlScope}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.collection.immutable.Stack
 import scala.util.parsing.input.{CharArrayReader, Reader}
 
 /**
- * Spec for [[com.criteo.tableau.XmlAttributesParser XmlAttributesParser]].
+ * Spec for [[XmlAttributesParser]].
  */
 @RunWith(classOf[JUnitRunner])
 class XmlAttributesParserSpec extends FlatSpec with Matchers {
@@ -47,7 +45,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
         k should equal("valid1")
         v should equal("@value@")
         xml.substring(from, to) should equal("@value@")
-        xmlScope should equal(Stack("foo", "a"))
+        xmlScope should equal(List("foo", "a"))
     }
   }
 
@@ -57,10 +55,10 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
     parser.repWithState(parser.emptyTag, State.empty)("<node1 a='b' /><node2 c='d' />") match {
       case parser.Success(State(attributes, tagStack), _) =>
         attributes should equal(List(
-          ScopedAttribute(Stack("node1"), Attribute("a", "b", 10, 11)),
-          ScopedAttribute(Stack("node2"), Attribute("c", "d", 25, 26))
+          ScopedAttribute(List("node1"), Attribute("a", "b", 10, 11)),
+          ScopedAttribute(List("node2"), Attribute("c", "d", 25, 26))
         ))
-        tagStack should equal(Stack.empty)
+        tagStack should equal(List.empty)
       case x => fail(s"Should get a success, got: $x")
     }
   }
@@ -78,8 +76,8 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
 
     parser.startTag(State.empty)("<foo bar='baz'>") match {
       case parser.Success(State(attributes, tagStack), _) =>
-        attributes should equal(List(ScopedAttribute(Stack("foo"), Attribute("bar", "baz", 10, 13))))
-        tagStack should equal(Stack("foo"))
+        attributes should equal(List(ScopedAttribute(List("foo"), Attribute("bar", "baz", 10, 13))))
+        tagStack should equal(List("foo"))
       case x => fail(s"Should get a success, got: $x")
     }
   }
@@ -89,8 +87,8 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
 
     parser.startTag(State.empty)("<foo bar='baz' >") match {
       case parser.Success(State(attributes, tagStack), _) =>
-        attributes should equal(List(ScopedAttribute(Stack("foo"), Attribute("bar", "baz", 10, 13))))
-        tagStack should equal(Stack("foo"))
+        attributes should equal(List(ScopedAttribute(List("foo"), Attribute("bar", "baz", 10, 13))))
+        tagStack should equal(List("foo"))
       case x => fail(s"Should get a success, got: $x")
     }
   }
@@ -100,8 +98,8 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
 
     parser.emptyTag(State.empty)("<foo bar='baz'/>") match {
       case parser.Success(State(attributes, tagStack), _) =>
-        attributes should equal(List(ScopedAttribute(Stack("foo"), Attribute("bar", "baz", 10, 13))))
-        tagStack should equal(Stack.empty)
+        attributes should equal(List(ScopedAttribute(List("foo"), Attribute("bar", "baz", 10, 13))))
+        tagStack should equal(List.empty)
       case x => fail(s"Should get a success, got: $x")
     }
   }
@@ -111,8 +109,8 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
 
     parser.emptyTag(State.empty)("<foo bar='baz' />") match {
       case parser.Success(State(attributes, tagStack), _) =>
-        attributes should equal(List(ScopedAttribute(Stack("foo"), Attribute("bar", "baz", 10, 13))))
-        tagStack should equal(Stack.empty)
+        attributes should equal(List(ScopedAttribute(List("foo"), Attribute("bar", "baz", 10, 13))))
+        tagStack should equal(List.empty)
       case x => fail(s"Should get a success, got: $x")
     }
   }
@@ -120,10 +118,10 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
   "endTag" should "unpop the parsed tag" in {
     val parser = XmlAttributesParser(alwaysTrue)
 
-    parser.endTag(State(Nil, Stack("foo")))("</foo>") match {
+    parser.endTag(State(Nil, List("foo")))("</foo>") match {
       case parser.Success(State(attributes, tagStack), _) =>
         attributes should equal(List.empty)
-        tagStack should equal(Stack.empty)
+        tagStack should equal(List.empty)
       case x => fail(s"Should get a success, got: $x")
     }
   }
@@ -131,7 +129,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
   "endTag" should "throw an error if the tag is not correct" in {
     val parser = XmlAttributesParser(alwaysTrue)
 
-    parser.endTag(State(Nil, Stack("bar")))("</foo>") match {
+    parser.endTag(State(Nil, List("bar")))("</foo>") match {
       case parser.Error(_, _) =>
       case x => fail(s"Should get an error, got: $x")
     }

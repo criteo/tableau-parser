@@ -1,9 +1,8 @@
-package com.criteo.tableau
+package com.criteo.tableau.templating
 
-import com.criteo.tableau.XmlAttributesParser.{AttributeKey, XmlScope}
+import com.criteo.tableau.templating
 
 import scala.annotation.tailrec
-import scala.collection.immutable.Stack
 import scala.util.parsing.combinator.RegexParsers
 
 /**
@@ -14,7 +13,7 @@ import scala.util.parsing.combinator.RegexParsers
 case class State(attributes: List[ScopedAttribute], scope: XmlScope)
 
 object State {
-  val empty = State(Nil, Stack.empty)
+  val empty = State(Nil, List.empty)
 }
 
 /**
@@ -32,18 +31,6 @@ case class ScopedAttribute(scope: XmlScope, attribute: Attribute)
  * @param toOffset   The end offset of the value inside the Xml document.
  */
 case class Attribute(key: AttributeKey, value: String, fromOffset: Int, toOffset: Int)
-
-object XmlAttributesParser {
-  /**
-   * The key of an attribute.
-   */
-  type AttributeKey = String
-
-  /**
-   * The scope, as a stack of xml tags. The current tag is first, and the root of the document is last.
-   */
-  type XmlScope = Stack[String]
-}
 
 /**
  * A Xml parser, keeping all attributes satisfying a filter.
@@ -66,8 +53,7 @@ case class XmlAttributesParser(keyPositionFilter: (AttributeKey, XmlScope) => Bo
   lazy val version = "<?xml" ~ attributes ~ "?>"
 
   /**
-   * Repeatedly parses until failure, updating the state at each successful parsing, starting from an empty
-   * [[com.criteo.tableau.State State]].
+   * Repeatedly parses until failure, updating the state at each successful parsing, starting from an empty [[State]].
    * @param p The parser to repeat.
    */
   def repWithState(p: (State) => Parser[State], initialState: State): Parser[State] = Parser { in =>
@@ -118,7 +104,7 @@ case class XmlAttributesParser(keyPositionFilter: (AttributeKey, XmlScope) => Bo
    */
   def startTag(state: State): Parser[State] = startTagExpr map {
     case tag ~ attrList =>
-      val currentPosition = state.scope.push(tag)
+      val currentPosition = tag :: state.scope
       val newAttributes = attrList filter {
         attr => keyPositionFilter(attr.key, currentPosition)
       } map {
@@ -140,7 +126,7 @@ case class XmlAttributesParser(keyPositionFilter: (AttributeKey, XmlScope) => Bo
       else if (state.scope.head != tag)
         err(s"Encountered end tag [$tag] with stack head [${state.scope.head}]")
       else
-        success(state.copy(scope = state.scope.pop))
+        success(state.copy(scope = state.scope.tail))
   }
 
   lazy val endTagExpr: Parser[String] = "</" ~> name <~ ">"
@@ -151,7 +137,7 @@ case class XmlAttributesParser(keyPositionFilter: (AttributeKey, XmlScope) => Bo
    */
   def emptyTag(state: State): Parser[State] = emptyTagExpr map {
     case tag ~ attrList =>
-      val currentPosition = state.scope.push(tag)
+      val currentPosition = tag :: state.scope
       val newAttributes = attrList filter {
         attr => keyPositionFilter(attr.key, currentPosition)
       } map {
@@ -173,7 +159,7 @@ case class XmlAttributesParser(keyPositionFilter: (AttributeKey, XmlScope) => Bo
   lazy val attributes: Parser[List[Attribute]] = attribute *
 
   /**
-   * Parses an attribute, and returns an [[com.criteo.tableau.Attribute Attribute]] containing the key and value
+   * Parses an attribute, and returns an [[Attribute]] containing the key and value
    * of the attribute, and the offsets around the value.
    */
   lazy val attribute: Parser[Attribute] = Parser { in =>
