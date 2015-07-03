@@ -1,10 +1,13 @@
 package com.criteo.tableau.templating
 
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
  * Spec for [[XmlAttributeReplacer]].
  */
+@RunWith(classOf[JUnitRunner])
 class XmlAttributeReplacerSpec extends FlatSpec with Matchers {
 
   "replace" should "replace valid attribute values" in {

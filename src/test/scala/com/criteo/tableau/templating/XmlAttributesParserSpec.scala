@@ -63,7 +63,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
     }
   }
 
-  "repWithState" should "throw an error if there are unclosed tags" in {
+  it should "throw an error if there are unclosed tags" in {
     val parser = XmlAttributesParser(alwaysTrue)
     parser.repWithState(state => parser.startTag(state) | parser.endTag(state), State.empty)("<a><b></b>") match {
       case parser.Error(_, _) =>
@@ -82,7 +82,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
     }
   }
 
-  "startTag" should "ignore spaces" in {
+  it should "ignore spaces" in {
     val parser = XmlAttributesParser(alwaysTrue)
 
     parser.startTag(State.empty)("<foo bar='baz' >") match {
@@ -104,7 +104,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
     }
   }
 
-  "emptyTag" should "ignore spaces" in {
+  it should "ignore spaces" in {
     val parser = XmlAttributesParser(alwaysTrue)
 
     parser.emptyTag(State.empty)("<foo bar='baz' />") match {
@@ -126,7 +126,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
     }
   }
 
-  "endTag" should "throw an error if the tag is not correct" in {
+  it should "throw an error if the tag is not correct" in {
     val parser = XmlAttributesParser(alwaysTrue)
 
     parser.endTag(State(Nil, List("bar")))("</foo>") match {
@@ -135,7 +135,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
     }
   }
 
-  "endTag" should "throw an error if the stack is empty" in {
+  it should "throw an error if the stack is empty" in {
     val parser = XmlAttributesParser(alwaysTrue)
 
     parser.endTag(State.empty)("</foo>") match {
@@ -189,7 +189,7 @@ class XmlAttributesParserSpec extends FlatSpec with Matchers {
     }
   }
 
-  "attribute" should "ignore spaces around the '='" in {
+  it should "ignore spaces around the '='" in {
     val parser = XmlAttributesParser(alwaysTrue)
 
     parser.attribute("a = 'bb'") match {
